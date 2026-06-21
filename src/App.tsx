@@ -1,66 +1,116 @@
-import { useState } from "react";
-import AddForm from "./components/AddForm";
-import Button from "./components/button"
+import React, { useState, useEffect } from "react";
+import TodoCard from "./components/TodoCard";
 
-function App() {
-  const [open, setOpen] = useState<boolean>(false);
-
-  return (
-    <>
-    <div className="flex flex-col h-screen bg-black items-center p-6">
-      <h1 className="text-5xl font-bold text-white mt-6">To-Do List</h1>
-      <Button open={open} setOpen={setOpen}/>
-      
-      {open && <AddForm />}
-
-      {/*{open && (
-        <div
-          onClick={() => setOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <form
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: "white", padding: 20, borderRadius: 8, minWidth: 320 }}
-            onSubmit={(e) => {
-              e.preventDefault();
-              // handle submit here
-              setOpen(false);
-            }}
-          >
-            <h3>Contact</h3>
-
-            <label>
-              Name
-              <input name="name" required />
-            </label>
-
-            <br />
-
-            <label>
-              Email
-              <input type="email" name="email" required />
-            </label>
-
-            <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-              <button type="submit">Send</button>
-              <button type="button" onClick={() => setOpen(false)}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}*/}
-
-    </div>
-    </>
-  )
+interface Todo {
+  title: string;
+  description: string;
 }
 
-export default App
+const App = () => {
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [todos, setTodos] = useState<Todo[]>(() => {
+    const saved = localStorage.getItem("todos");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const addTodo = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const title = (formData.get("title") as string) || "";
+    const description = (formData.get("description") as string) || "";
+
+    if (title.trim() === "") return;
+
+    setTodos([...todos, { title, description }]);
+    closeModal();
+  };
+
+  return (
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-col justify-center items-center">
+        <h1 className="text-4xl font-bold text-black mt-2 text-center">
+          Todo List
+        </h1>
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg w-fit mt-2 hover:bg-blue-600 transition-all cursor-pointer"
+          onClick={openModal}
+        >
+          Add Todo
+        </button>
+
+        {isModalOpen && (
+          <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/50">
+            <form
+              onSubmit={addTodo}
+              className="bg-white p-8 rounded-lg shadow-lg w-1/2 relative"
+            >
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="text-gray-500 text-2xl hover:text-gray-600 transition-all cursor-pointer"
+                  onClick={closeModal}
+                >
+                  X
+                </button>
+              </div>
+
+              <h2 className="text-2xl font-bold mb-4">Add Todo</h2>
+              <input
+                name="title"
+                type="text"
+                className="border border-gray-300 rounded-lg px-4 py-2 w-full mb-2 text-black"
+                placeholder="Enter your todo"
+                required
+              />
+              <textarea
+                name="description"
+                id="description"
+                className="border border-gray-300 rounded-lg px-4 py-2 w-full mb-2 text-black"
+                placeholder="description"
+              ></textarea>
+              <div className="flex justify-end gap-4 mt-4">
+                <button
+                  type="button"
+                  className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all cursor-pointer"
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all cursor-pointer"
+                >
+                  Add Todo
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="flex flex-wrap justify-center gap-6 mt-10">
+          {todos.map((todo, index) => (
+            <TodoCard
+              key={index}
+              title={todo.title}
+              description={todo.description}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
