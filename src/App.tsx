@@ -6,6 +6,7 @@ import { FaSearch } from "react-icons/fa";
 interface Todo {
   title: string;
   description: string;
+  completed: boolean;
 }
 
 const App = () => {
@@ -20,8 +21,8 @@ const App = () => {
   const [inputDescription, setInputDescription] = useState<string>("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
-
   const [viewingTodo, setViewingTodo] = useState<Todo | null>(null);
+  const [inputCompleted, setInputCompleted] = useState<boolean>(false);
 
 
   useEffect(() => {
@@ -33,6 +34,7 @@ const App = () => {
     setEditingIndex(null);
     setInputTitle("");
     setInputDescription("");
+    setInputCompleted(false);
   };
 
   const openEditModal = (index: number) => {
@@ -40,6 +42,7 @@ const App = () => {
     setEditingIndex(index);
     setInputTitle(todos[index].title);
     setInputDescription(todos[index].description);
+    setInputCompleted(todos[index].completed);
   };
 
   const closeModal = () => {
@@ -57,14 +60,14 @@ const App = () => {
     if (editingIndex !== null) {
       const updatedTodos = todos.map((todo, idx) =>
         idx === editingIndex
-          ? { title: inputTitle, description: inputDescription }
+          ? { title: inputTitle, description: inputDescription, completed: inputCompleted }
           : todo,
       );
       setTodos(updatedTodos);
     } else {
       setTodos([
         ...todos,
-        { title: inputTitle, description: inputDescription },
+        { title: inputTitle, description: inputDescription, completed: false },
       ]);
     }
     closeModal();
@@ -78,8 +81,15 @@ const App = () => {
 
     if (title.trim() === "") return;
 
-    setTodos([...todos, { title, description }]);
+    setTodos([...todos, { title, description, completed: false }]);
     closeModal();
+  };
+
+  const handleToggleComplete = (index: number) => {
+    const updatedTodos = todos.map((todo, idx) =>
+      idx === index ? { ...todo, completed: !todo.completed } : todo,
+    );
+    setTodos(updatedTodos);
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,9 +105,14 @@ const App = () => {
   if (viewingTodo) {
     return (
       <div className="flex flex-col h-screen p-8 justify-center items-center">
-        <div className="bg-white p-8 rounded-xl shadow-lg w-1/2">
-          <h1 className="text-4xl font-bold mb-4">{viewingTodo.title}</h1>
-          <p className="text-lg text-gray-700">{viewingTodo.description}</p>
+        <div className="bg-white p-8 rounded-xl shadow-lg w-1/2 border-2">
+          <h1 className="text-4xl font-bold mb-4 underline decoration-gray-400 decoration-2">{viewingTodo.title}</h1>
+          <p className="text-lg text-gray-700 p-2 border-y border-gray-200 indent-4">{viewingTodo.description}</p>
+          {viewingTodo.completed ? (
+            <p className="text-lg text-green-500 indent-4">Completed</p>
+          ) : (
+            <p className="text-lg text-red-500 indent-4">Not Completed</p>
+          )}
           <button 
             className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-lg"
             onClick={() => setViewingTodo(null)}
@@ -146,6 +161,8 @@ const App = () => {
                 setInputTitle={setInputTitle}
                 setInputDescription={setInputDescription}
                 editingIndex={editingIndex}
+                inputCompleted={inputCompleted}
+                setInputCompleted={setInputCompleted}
               />}
 
             <div className="flex flex-wrap justify-center gap-6 mt-10">

@@ -8,6 +8,8 @@ const TodoModal = ({
   setInputTitle,
   setInputDescription,
   editingIndex,
+  inputCompleted,
+  setInputCompleted,
 }: {
   closeModal: () => void;
   handleSaveTodo: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -16,6 +18,8 @@ const TodoModal = ({
   setInputTitle: (value: string) => void;
   setInputDescription: (value: string) => void;
   editingIndex: number | null;
+  inputCompleted: boolean;
+  setInputCompleted: (value: boolean) => void;
 }) => {
   return (
     <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/50">
@@ -53,6 +57,17 @@ const TodoModal = ({
           className="border border-gray-300 rounded-lg px-4 py-2 w-full mb-2 text-black"
           placeholder="description"
         ></textarea>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="completed"
+            id="completed"
+            checked={inputCompleted}
+            onChange={(e) => setInputCompleted(e.target.checked)}
+            className="cursor-pointer"
+          />
+          <label htmlFor="completed" className="text-black">Completed</label>
+        </div>
         <div className="flex justify-end gap-4 mt-4">
           <button
             type="button"
