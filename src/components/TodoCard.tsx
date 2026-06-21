@@ -7,6 +7,7 @@ interface TodoCardProps {
   description: string;
   onDelete: () => void;
   onEdit: () => void;
+  onView: () => void;
 }
 
 function TodoCard({
@@ -14,19 +15,29 @@ function TodoCard({
   description,
   onDelete,
   onEdit,
+  onView,
 }: TodoCardProps): React.JSX.Element {
   return (
-    <div className="flex flex-col bg-gray-200 rounded-xl w-[400px] h-[200px] overflow-hidden p-6 mt-6">
+    <div
+      className="flex flex-col bg-gray-200 rounded-xl w-[400px] h-[200px] overflow-hidden p-6 mt-6 hover:cursor-pointer transition-all"
+      onClick={onView}
+    >
       <div className="flex justify-end gap-4">
         <button
           className="cursor-pointer hover:text-red-500 text-2xl"
-          onClick={onDelete}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
         >
           <MdDelete />
         </button>
         <button
           className="cursor-pointer hover:text-blue-500 text-2xl"
-          onClick={onEdit}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
         >
           <CiEdit />
         </button>
