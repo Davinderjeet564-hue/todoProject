@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 
 const TodoModal = ({
   closeModal,
@@ -31,9 +31,63 @@ const TodoModal = ({
   const labelCls = isDarkMode ? "text-gray-300" : "text-gray-700";
   const closeHover = isDarkMode ? "hover:text-gray-200 text-gray-500" : "hover:text-gray-700 text-gray-400";
 
+
+  const modalRef = useRef<HTMLFormElement | null>(null);
+
+  useEffect(() => {
+    const firstInput = modalRef.current?.querySelector('input') as HTMLInputElement | null;
+    firstInput?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeModal();
+      }
+      if (e.key === "Tab" && modalRef.current) {
+        e.preventDefault();
+        const focusableElements = modalRef.current.querySelectorAll(
+          'input, textarea, button, [href], select, [tabindex]:not([tabindex="-1"])'
+        ) as NodeListOf<HTMLElement>;
+
+        const currentIndex = Array.from(focusableElements).findIndex(
+          el => document.activeElement === el
+        );
+        const nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
+        if (nextIndex >= 0 && nextIndex < focusableElements.length) {
+          focusableElements[nextIndex].focus();
+        } else {
+          if (e.shiftKey) {
+            focusableElements[focusableElements.length - 1]?.focus();
+          } else {
+            focusableElements[0]?.focus();
+          }
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [closeModal, handleSaveTodo]);
+
+
+  useEffect(()=>{
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
+    return ()=>{
+      document.body.style.overflow = originalStyle;
+    }
+  }, [])
+
+
+
+
   return (
     <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/60 backdrop-blur-sm px-4">
       <form
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
         onSubmit={handleSaveTodo}
         className={`${surface} p-8 rounded-2xl shadow-2xl w-full max-w-lg relative border ${border} transition-colors duration-300`}
       >
