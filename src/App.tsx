@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import TodoCard from "./components/TodoCard";
 import TodoModal from "./components/TodoModal";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaSun, FaMoon } from "react-icons/fa";
 
 interface Todo {
   title: string;
@@ -16,18 +16,32 @@ const App = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-
   const [inputTitle, setInputTitle] = useState<string>("");
   const [inputDescription, setInputDescription] = useState<string>("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [viewingTodo, setViewingTodo] = useState<Todo | null>(null);
   const [inputCompleted, setInputCompleted] = useState<boolean>(false);
-
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
 
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
   const openAddModal = () => {
     setIsModalOpen(true);
@@ -65,31 +79,9 @@ const App = () => {
       );
       setTodos(updatedTodos);
     } else {
-      setTodos([
-        ...todos,
-        { title: inputTitle, description: inputDescription, completed: false },
-      ]);
+      setTodos([...todos, { title: inputTitle, description: inputDescription, completed: false }]);
     }
     closeModal();
-  };
-
-  const addTodo = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const title = (formData.get("title") as string) || "";
-    const description = (formData.get("description") as string) || "";
-
-    if (title.trim() === "") return;
-
-    setTodos([...todos, { title, description, completed: false }]);
-    closeModal();
-  };
-
-  const handleToggleComplete = (index: number) => {
-    const updatedTodos = todos.map((todo, idx) =>
-      idx === index ? { ...todo, completed: !todo.completed } : todo,
-    );
-    setTodos(updatedTodos);
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,96 +94,141 @@ const App = () => {
     todo.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  // ── Shared theme tokens ─────────────────────────────────────────────────────
+  const bg = isDarkMode ? "bg-gray-950" : "bg-slate-50";
+  const surface = isDarkMode ? "bg-gray-900" : "bg-white";
+  const text = isDarkMode ? "text-gray-100" : "text-gray-900";
+  const subText = isDarkMode ? "text-gray-400" : "text-gray-500";
+  const border = isDarkMode ? "border-gray-700" : "border-gray-200";
+  const inputBg = isDarkMode ? "bg-gray-800 text-gray-100 placeholder-gray-500" : "bg-gray-100 text-gray-900 placeholder-gray-400";
+  const searchWrap = isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300";
+
+  // ── View: Todo Detail ───────────────────────────────────────────────────────
   if (viewingTodo) {
     return (
-      <div className="flex flex-col h-screen p-8 justify-center items-center">
-        <div className="bg-white p-8 rounded-xl shadow-lg w-1/2 border-2">
-          <h1 className="text-4xl font-bold mb-4 underline decoration-gray-400 decoration-2">{viewingTodo.title}</h1>
-          <p className="text-lg text-gray-700 p-2 border-y border-gray-200 indent-4">{viewingTodo.description}</p>
+      <div className={`flex flex-col min-h-screen p-8 justify-center items-center ${bg} ${text} transition-colors duration-300`}>
+        <div className={`p-8 rounded-2xl shadow-2xl w-full max-w-lg border ${surface} ${border}`}>
+          <h1 className={`text-3xl font-bold mb-4 underline decoration-2 decoration-indigo-400 ${text}`}>
+            {viewingTodo.title}
+          </h1>
+          <p className={`text-base p-3 rounded-lg border ${border} ${inputBg} indent-4 mb-4`}>
+            {viewingTodo.description || <span className={subText}>No description provided.</span>}
+          </p>
           {viewingTodo.completed ? (
-            <p className="text-lg text-green-500 indent-4">Completed</p>
+            <span className="inline-block text-sm font-semibold text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full">
+              ✓ Completed
+            </span>
           ) : (
-            <p className="text-lg text-red-500 indent-4">Not Completed</p>
+            <span className="inline-block text-sm font-semibold text-rose-400 bg-rose-400/10 px-3 py-1 rounded-full">
+              ✗ Not Completed
+            </span>
           )}
-          <button 
-            className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-lg"
+          <button
+            className="mt-6 block w-full bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer"
             onClick={() => setViewingTodo(null)}
           >
-            Back to List
+            ← Back to List
           </button>
         </div>
       </div>
     );
-  } else {
-    return (
-      <div className="flex flex-col h-screen">
-        <div className="flex justify-between items-center px-8 py-4 w-full border-b border-gray-200">
-          <div className="flex justify-center w-1/3">
+  }
+
+  // ── View: Main List ─────────────────────────────────────────────────────────
+  return (
+    <div className={`flex flex-col min-h-screen ${bg} ${text} transition-colors duration-300`}>
+      {/* Header */}
+      <header className={`sticky top-0 z-10 ${surface} border-b ${border} px-6 py-4 shadow-sm backdrop-blur-sm`}>
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+
+          {/* App Title */}
+          <h1 className={`text-2xl font-extrabold tracking-tight ${text} shrink-0`}>
+            <span className="text-indigo-500">✓</span> Todo List
+          </h1>
+
+          {/* Search + Toggle */}
+          <div className="flex items-center gap-3 flex-1 justify-end">
+            {/* Search Field */}
+            <div className={`flex items-center gap-2 border ${searchWrap} rounded-xl px-3 py-2 w-64 transition-colors duration-300`}>
+              <FaSearch className={`shrink-0 text-sm ${subText}`} />
+              <input
+                type="search"
+                placeholder="Search todos…"
+                className={`bg-transparent outline-none text-sm w-full ${text}`}
+                value={searchTerm}
+                onChange={handleSearch}
+              />
+            </div>
+
+            {/* Theme Toggle */}
             <button
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all cursor-pointer"
-                onClick={openAddModal}
-              >
-                Add Todo
-              </button>
-            </div>
-            <h1 className="text-4xl font-bold text-black text-center w-1/3">
-              Todo List
-            </h1>
-            <div className="flex justify-center w-1/3">
-              <div className="flex items-end bg-gray-200 rounded-lg p-2">
-                <input
-                  type="search"
-                  placeholder="search todo"
-                  className="bg-transparent rounded-lg p-2 w-fit text-black outline-none"
-                  value={searchTerm}
-                  onChange={handleSearch}
-                />
-                <FaSearch className="text-black text-xl cursor-pointer" />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center flex-grow overflow-y-auto">
-            {isModalOpen && 
-              <TodoModal
-                closeModal={closeModal}
-                handleSaveTodo={handleSaveTodo}
-                inputTitle={inputTitle}
-                inputDescription={inputDescription}
-                setInputTitle={setInputTitle}
-                setInputDescription={setInputDescription}
-                editingIndex={editingIndex}
-                inputCompleted={inputCompleted}
-                setInputCompleted={setInputCompleted}
-              />}
-
-            <div className="flex flex-wrap justify-center gap-6 mt-10">
-              {isSearching
-                ? filteredTodos.map((todo, index) => (
-                    <TodoCard
-                      key={index}
-                      title={todo.title}
-                      description={todo.description}
-                      onDelete={() => handleDelete(index)}
-                      onEdit={() => openEditModal(index)}
-                      onView={() => setViewingTodo(todo)}
-                    />
-                  ))
-                : todos.map((todo, index) => (
-                    <TodoCard
-                      key={index}
-                      title={todo.title}
-                      description={todo.description}
-                      onDelete={() => handleDelete(index)}
-                      onEdit={() => openEditModal(index)}
-                      onView={() => setViewingTodo(todo)}
-                    />
-                  ))}
-            </div>
+              onClick={toggleDarkMode}
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm border transition-all duration-200 active:scale-95 cursor-pointer
+                ${isDarkMode
+                  ? "bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-500"
+                  : "bg-gray-900 hover:bg-gray-800 text-white border-gray-900"
+                }`}
+            >
+              {isDarkMode ? <FaSun className="text-yellow-300" /> : <FaMoon />}
+              {isDarkMode ? "Light" : "Dark"}
+            </button>
           </div>
         </div>
-      );
-    };
-  };
+      </header>
+
+      {/* Add Todo Button */}
+      <div className="flex justify-center pt-8 pb-2">
+        <button
+          className="bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white font-semibold px-6 py-2.5 rounded-xl shadow-md transition-all duration-200 cursor-pointer"
+          onClick={openAddModal}
+        >
+          + Add Todo
+        </button>
+      </div>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <TodoModal
+          closeModal={closeModal}
+          handleSaveTodo={handleSaveTodo}
+          inputTitle={inputTitle}
+          inputDescription={inputDescription}
+          setInputTitle={setInputTitle}
+          setInputDescription={setInputDescription}
+          editingIndex={editingIndex}
+          inputCompleted={inputCompleted}
+          setInputCompleted={setInputCompleted}
+          isDarkMode={isDarkMode}
+        />
+      )}
+
+      {/* Todo Cards */}
+      <main className="flex flex-col items-center flex-grow overflow-y-auto px-4 pb-10">
+        {(isSearching ? filteredTodos : todos).length === 0 ? (
+          <div className={`mt-20 text-center ${subText}`}>
+            <p className="text-5xl mb-4">📋</p>
+            <p className="text-lg font-medium">{isSearching ? "No todos match your search." : "No todos yet. Add one!"}</p>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-6 mt-8 w-full max-w-6xl">
+            {(isSearching ? filteredTodos : todos).map((todo, index) => (
+              <TodoCard
+                key={index}
+                title={todo.title}
+                description={todo.description}
+                completed={todo.completed}
+                onDelete={() => handleDelete(index)}
+                onEdit={() => openEditModal(index)}
+                onView={() => setViewingTodo(todo)}
+                isDarkMode={isDarkMode}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
 
 export default App;

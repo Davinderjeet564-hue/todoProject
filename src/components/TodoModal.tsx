@@ -10,6 +10,7 @@ const TodoModal = ({
   editingIndex,
   inputCompleted,
   setInputCompleted,
+  isDarkMode,
 }: {
   closeModal: () => void;
   handleSaveTodo: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -20,65 +21,96 @@ const TodoModal = ({
   editingIndex: number | null;
   inputCompleted: boolean;
   setInputCompleted: (value: boolean) => void;
+  isDarkMode: boolean;
 }) => {
+  const surface = isDarkMode ? "bg-gray-900 text-gray-100" : "bg-white text-gray-900";
+  const border = isDarkMode ? "border-gray-700" : "border-gray-300";
+  const inputCls = isDarkMode
+    ? "bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-500 focus:border-indigo-500"
+    : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-indigo-400";
+  const labelCls = isDarkMode ? "text-gray-300" : "text-gray-700";
+  const closeHover = isDarkMode ? "hover:text-gray-200 text-gray-500" : "hover:text-gray-700 text-gray-400";
+
   return (
-    <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/50">
+    <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/60 backdrop-blur-sm px-4">
       <form
         onSubmit={handleSaveTodo}
-        className="bg-white p-8 rounded-lg shadow-lg w-1/2 relative"
+        className={`${surface} p-8 rounded-2xl shadow-2xl w-full max-w-lg relative border ${border} transition-colors duration-300`}
       >
-        <div className="flex justify-end">
-          <button
-            type="button"
-            className="text-gray-500 text-2xl hover:text-gray-600 transition-all cursor-pointer"
-            onClick={closeModal}
-          >
-            X
-          </button>
-        </div>
+        {/* Close button */}
+        <button
+          type="button"
+          className={`absolute top-4 right-4 text-2xl font-bold leading-none transition-colors cursor-pointer ${closeHover}`}
+          onClick={closeModal}
+          aria-label="Close modal"
+        >
+          ×
+        </button>
 
-        <h2 className="text-2xl font-bold mb-4">
-          {editingIndex !== null ? "Edit Todo" : "Add Todo"}
+        <h2 className="text-2xl font-bold mb-6">
+          {editingIndex !== null ? "✏️ Edit Todo" : "➕ Add Todo"}
         </h2>
+
+        {/* Title */}
+        <label className={`block text-sm font-semibold mb-1 ${labelCls}`} htmlFor="todo-title">
+          Title <span className="text-rose-400">*</span>
+        </label>
         <input
+          id="todo-title"
           value={inputTitle}
           onChange={(e) => setInputTitle(e.target.value)}
           name="title"
           type="text"
-          className="border border-gray-300 rounded-lg px-4 py-2 w-full mb-2 text-black"
-          placeholder="Enter your todo"
+          className={`border rounded-xl px-4 py-2.5 w-full mb-4 outline-none transition-colors ${inputCls}`}
+          placeholder="What needs to be done?"
           required
         />
+
+        {/* Description */}
+        <label className={`block text-sm font-semibold mb-1 ${labelCls}`} htmlFor="description">
+          Description
+        </label>
         <textarea
           name="description"
           id="description"
+          rows={3}
           value={inputDescription}
           onChange={(e) => setInputDescription(e.target.value)}
-          className="border border-gray-300 rounded-lg px-4 py-2 w-full mb-2 text-black"
-          placeholder="description"
-        ></textarea>
-        <div className="flex items-center gap-2">
+          className={`border rounded-xl px-4 py-2.5 w-full mb-4 outline-none resize-none transition-colors ${inputCls}`}
+          placeholder="Add some details…"
+        />
+
+        {/* Completed checkbox */}
+        <div className="flex items-center gap-3 mb-6">
           <input
             type="checkbox"
             name="completed"
             id="completed"
             checked={inputCompleted}
             onChange={(e) => setInputCompleted(e.target.checked)}
-            className="cursor-pointer"
+            className="w-4 h-4 accent-indigo-500 cursor-pointer"
           />
-          <label htmlFor="completed" className="text-black">Completed</label>
+          <label htmlFor="completed" className={`text-sm font-medium cursor-pointer ${labelCls}`}>
+            Mark as completed
+          </label>
         </div>
-        <div className="flex justify-end gap-4 mt-4">
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3">
           <button
             type="button"
-            className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all cursor-pointer"
+            className={`px-5 py-2.5 rounded-xl font-semibold text-sm border transition-all active:scale-95 cursor-pointer
+              ${isDarkMode
+                ? "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
+              }`}
             onClick={closeModal}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all cursor-pointer"
+            className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-indigo-500 hover:bg-indigo-600 text-white transition-all active:scale-95 cursor-pointer"
           >
             {editingIndex !== null ? "Save Changes" : "Add Todo"}
           </button>
