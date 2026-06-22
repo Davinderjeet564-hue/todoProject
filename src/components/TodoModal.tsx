@@ -7,7 +7,7 @@ const TodoModal = ({
   inputDescription,
   setInputTitle,
   setInputDescription,
-  editingIndex,
+  editingId,
   inputCompleted,
   setInputCompleted,
   isDarkMode,
@@ -18,7 +18,7 @@ const TodoModal = ({
   inputDescription: string;
   setInputTitle: (value: string) => void;
   setInputDescription: (value: string) => void;
-  editingIndex: number | null;
+  editingId: string | null;
   inputCompleted: boolean;
   setInputCompleted: (value: boolean) => void;
   isDarkMode: boolean;
@@ -37,7 +37,9 @@ const TodoModal = ({
   useEffect(() => {
     const firstInput = modalRef.current?.querySelector('input') as HTMLInputElement | null;
     firstInput?.focus();
+  }, []);
 
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -63,11 +65,11 @@ const TodoModal = ({
           }
         }
       }
-    }
+    };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [closeModal, handleSaveTodo]);
+  }, [closeModal]);
 
 
   useEffect(()=>{
@@ -102,7 +104,7 @@ const TodoModal = ({
         </button>
 
         <h2 className="text-2xl font-bold mb-6">
-          {editingIndex !== null ? "✏️ Edit Todo" : "➕ Add Todo"}
+          {editingId !== null ? "✏️ Edit Todo" : "➕ Add Todo"}
         </h2>
 
         {/* Title */}
@@ -166,7 +168,7 @@ const TodoModal = ({
             type="submit"
             className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-indigo-500 hover:bg-indigo-600 text-white transition-all active:scale-95 cursor-pointer"
           >
-            {editingIndex !== null ? "Save Changes" : "Add Todo"}
+            {editingId !== null ? "Save Changes" : "Add Todo"}
           </button>
         </div>
       </form>
